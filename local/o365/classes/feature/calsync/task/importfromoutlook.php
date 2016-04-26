@@ -74,7 +74,16 @@ class importfromoutlook extends \core\task\scheduled_task {
                                 mtrace($errmsg);
                                 continue;
                             }
-                            $idmapexists = $DB->record_exists('local_o365_calidmap', ['outlookeventid' => $event['Id']]);
+                            // Verify the Outlook calendar subscription type is an Outlook Group or standard calandar.
+                            if (!empty($calsub->o365calemail) && validate_email($calsub->o365calemail) && empty($event['isOrganizer'])) {
+                                $idmapexists = false;
+                                if ($calsub->o365calemail == $event['organizer']['emailAddress']['address']) {
+                                    // Perform sync from Outlook group event to Moodle event.
+                                    $idmapexists = $DB->record_exists('local_o365_calidmap', ['outlookeventid' => $event['Id']]);
+                                }
+                            } else {
+                                $idmapexists = $DB->record_exists('local_o365_calidmap', ['outlookeventid' => $event['Id']]);
+                            }
                             if ($idmapexists === false) {
                                 // Create Moodle event.
                                 $eventparams = [

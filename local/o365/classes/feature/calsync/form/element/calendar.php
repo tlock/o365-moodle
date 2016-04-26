@@ -134,7 +134,12 @@ class calendar extends \MoodleQuickForm_advcheckbox {
         $html .= \html_writer::label(get_string('ucp_syncwith_title', 'local_o365'), $availcalid);
         $calselectopts = [];
         foreach ($availableo365calendars as $i => $info) {
-            $calselectopts[$info['id']] = $info['name'];
+            // If the calendar option is an Outlook group, use the email address as the index.
+            if (isset($info['mail'])) {
+                $calselectopts[$info['mail']] = $info['name'];
+            } else {
+                $calselectopts[$info['id']] = $info['name'];
+            }
         }
         $html .= \html_writer::select($calselectopts, $availcalname, $this->syncwith, false, ['id' => $availcalid]);
         $html .= '</div>';

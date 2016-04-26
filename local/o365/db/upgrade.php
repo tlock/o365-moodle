@@ -395,5 +395,14 @@ function xmldb_local_o365_upgrade($oldversion) {
         upgrade_plugin_savepoint($result, '2015111911.01', 'local', 'o365');
     }
 
+    if ($result && $oldversion < 2015111912.01) {
+        $table = new xmldb_table('local_o365_calsub');
+        $field = new xmldb_field('o365calemail', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'o365calid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint($result, '2015111912.01', 'local', 'o365');
+    }
+
     return $result;
 }

@@ -41,6 +41,7 @@
         <FIELD NAME="caltype" TYPE="char" LENGTH="31" NOTNULL="true" SEQUENCE="false" COMMENT="the type of calendar - site,user,course,group"/>
         <FIELD NAME="caltypeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the id of the entity the calendar is for, i.e. courseid"/>
         <FIELD NAME="o365calid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="the ID of the o365 calendar to sync to"/>
+        <FIELD NAME="o365calemail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="the email address of the o365 calandar group organizer."/>
         <FIELD NAME="isprimary" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Is the o365 calendar the default."/>
         <FIELD NAME="syncbehav" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="the sync behavior"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="time subscription created"/>

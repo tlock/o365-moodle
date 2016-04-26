@@ -176,7 +176,8 @@ class main {
                            u.firstname,
                            u.lastname,
                            sub.isprimary as subisprimary,
-                           sub.o365calid as subo365calid
+                           sub.o365calid as subo365calid,
+                           sub.o365calemail as subo365calemail
                       FROM {user} u
                       JOIN {local_o365_calsub} sub ON sub.user_id = u.id
                      WHERE sub.caltype = ? AND (sub.syncbehav = ? OR sub.syncbehav = ?)';
@@ -191,7 +192,8 @@ class main {
                                u.firstname,
                                u.lastname,
                                sub.isprimary as subisprimary,
-                               sub.o365calid as subo365calid
+                               sub.o365calid as subo365calid,
+                               sub.o365calemail as subo365calemail
                           FROM {user} u
                           JOIN {user_enrolments} ue ON ue.userid = u.id
                           JOIN {enrol} e ON e.id = ue.enrolid
@@ -210,7 +212,8 @@ class main {
                                u.firstname,
                                u.lastname,
                                sub.isprimary as subisprimary,
-                               sub.o365calid as subo365calid
+                               sub.o365calid as subo365calid,
+                               sub.o365calemail as subo365calemail
                           FROM {user} u
                           JOIN {user_enrolments} ue ON ue.userid = u.id
                           JOIN {enrol} e ON e.id = ue.enrolid
@@ -243,6 +246,15 @@ class main {
             return true;
         }
 
+// testing - place holder with hard coded values for the name and address of organizer.
+$organizer = [
+    'organizer' => [
+        'EmailAddress' => [
+            'Name' => 'm365_30: 101',
+            'Address' => 'm36530_101@rldev.onmicrosoft.com',
+        ]
+    ]
+];
         // Move users who've subscribed to non-primary calendars.
         $nonprimarycalsubs = [];
         $eventcreatorsub = null;
@@ -254,7 +266,13 @@ class main {
                 $nonprimarycalsubs[] = $attendee;
                 unset($attendees[$userid]);
             }
+
+// Testing. using hard coded values while testing.
+// if (empty($organizer['organizer']['EmailAddress']['address']) && !empty($attendee->subo365calemail)) {
+//     $organizer['organizer']['EmailAddress']['address'] = $attendee->subo365calemail;
+// }
         }
+
 
         // Sync primary-calendar users as attendees on a single event.
         if (!empty($attendees)) {
@@ -263,7 +281,7 @@ class main {
             if (isset($eventcreatorsub->subisprimary) && $eventcreatorsub->subisprimary == 1) {
                 $calid = null;
             }
-            $response = $apiclient->create_event($subject, $body, $timestart, $timeend, $attendees, [], $calid);
+            $response = $apiclient->create_event($subject, $body, $timestart, $timeend, $attendees, $organizer, $calid);
             $idmaprec = [
                 'eventid' => $event->id,
                 'outlookeventid' => $response['Id'],
@@ -277,7 +295,7 @@ class main {
         foreach ($nonprimarycalsubs as $attendee) {
             $apiclient = $this->construct_calendar_api($attendee->id);
             $calid = (!empty($attendee->subo365calid)) ? $attendee->subo365calid : null;
-            $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], [], $calid);
+            $response = $apiclient->create_event($subject, $body, $timestart, $timeend, [], $organizer, $calid);
             $idmaprec = [
                 'eventid' => $event->id,
                 'outlookeventid' => $response['Id'],
@@ -300,6 +318,18 @@ class main {
         $apiclient = $this->construct_calendar_api($USER->id, false);
         $response = $apiclient->get_calendars();
         return (!empty($response['value']) && is_array($response['value'])) ? $response['value'] : [];
+    }
+
+    /**
+     * Get user calendars groups.
+     *
+     * @return array Array of user calendars groups.
+     */
+    public function get_calendargroups() {
+            global $USER;
+            $apiclient = $this->construct_calendar_api($USER->id, false);
+            $response = $apiclient->get_groups();
+            return (!empty($response['value']) && is_array($response['value'])) ? $response['value'] : [];
     }
 
     /**

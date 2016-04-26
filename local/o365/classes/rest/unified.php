@@ -397,6 +397,15 @@ class unified extends \local_o365\rest\o365api {
         $endpoint = (!empty($calendarid)) ? '/me/calendars/'.$calendarid.'/events' : '/me/calendar/events';
         if (!empty($since)) {
             $since = urlencode(date(DATE_ATOM, $since));
+// testing - API requires a specific date format that includes zulu character.  
+$since = urldecode($since);
+print_object($since);
+$date = new \DateTime($since);
+$since = $date->format('Y-m-d\TH:i:s\Z');
+// testing - recalling past event
+$since = '2016-04-26T04:40:00Z';
+print_object($since);
+$since = urlencode($since);
             $endpoint .= '?$filter=CreatedDateTime%20ge%20'.$since;
         }
         $response = $this->apicall('get', $endpoint);

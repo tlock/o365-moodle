@@ -79,9 +79,10 @@ class subscriptions extends \moodleform {
      * @param string $primarycalid The o365 ID of the user's primary calendar.
      * @param bool $cancreatesiteevents Whether the user has permission to create site events.
      * @param array $cancreatecourseevents Array of user courses containing whether the user has permission to create course events.
+     * @param array $o356groups Array of group calendars.
      * @return bool Success/Failure.
      */
-    public static function update_subscriptions($fromform, $primarycalid, $cancreatesiteevents, $cancreatecourseevents) {
+    public static function update_subscriptions($fromform, $primarycalid, $cancreatesiteevents, $cancreatecourseevents, $o356groups) {
         global $DB, $USER;
 
         // Determine and organize existing subscriptions.
@@ -212,6 +213,13 @@ class subscriptions extends \moodleform {
         }
         foreach ($newcoursesubs as $courseid => $coursecaldata) {
             $syncwith = (!empty($coursecaldata['syncwith'])) ? $coursecaldata['syncwith'] : '';
+            // If a o365 calendar group was selected, use the o365 organizer email as an index, but save the standard calendar id value.
+            $o365mail = null;
+            if (validate_email($syncwith) && isset($o356groups[$syncwith])) {
+                $o365mail = $o356groups[$syncwith]['mail'];
+                $syncwith = $o356groups[$syncwith]['o365calid'];
+            }
+
             $syncbehav = (!empty($coursecaldata['syncbehav'])) ? $coursecaldata['syncbehav'] : 'out';
             if (empty($cancreatecourseevents[$courseid])) {
                 $syncbehav = 'out';
@@ -223,6 +231,7 @@ class subscriptions extends \moodleform {
                     'caltype' => 'course',
                     'caltypeid' => $courseid,
                     'o365calid' => $syncwith,
+                    'o365calemail' => $o365mail,
                     'syncbehav' => $syncbehav,
                     'timecreated' => time(),
                     'isprimary' => ($syncwith == $primarycalid) ? '1' : '0',
@@ -243,11 +252,15 @@ class subscriptions extends \moodleform {
                 if ($existingcoursesubs[$courseid]->o365calid !== $syncwith) {
                     $changed = true;
                 }
+                if ($existingcoursesubs[$courseid]->o365calemail !== $o365mail) {
+                    $changed = true;
+                }
                 if ($changed === true) {
                     // Already subscribed, update behavior.
                     $updatedrec = [
                         'id' => $existingcoursesubs[$courseid]->id,
                         'o365calid' => $syncwith,
+                        'o365calemail' => $o365mail,
                         'syncbehav' => $syncbehav,
                         'isprimary' => ($syncwith == $primarycalid) ? '1' : '0',
                     ];
