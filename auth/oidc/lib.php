@@ -46,3 +46,38 @@ function auth_oidc_initialize_customicon($filefullname) {
         theme_reset_all_caches();
     }
 }
+
+/**
+ * Check for connection abilities.
+ *
+ * @param int $userid Moodle user id to check permissions for.
+ * @param string $mode Mode to check
+ *                     'connect' to check for connect specific capability
+ *                     'disconnect' to check for disconnect capability.
+ *                     'both' to check for disconnect and connect capability.
+ * @param boolean $require Use require_capability rather than has_capability.
+ * @return True if has capability when $resuire is false. Other wise return result of require_capability.
+ */
+function auth_oidc_connectioncapability($userid, $mode = 'connect', $require = false) {
+    $check = 'has_capability';
+    if ($require) {
+        // If requiring the capability and user has manageconnection than checking connect and disconnect is not needed.
+        $check = 'require_capability';
+        if (has_capability('auth/oidc:manageconnection', \context_user::instance($userid), $userid)) {
+            return true;
+        }
+    } else if ($check('auth/oidc:manageconnection', \context_user::instance($userid), $userid)) {
+        return true;
+    }
+
+    switch ($mode) {
+        case "connect":
+            return $check('auth/oidc:manageconnectionconnect', \context_user::instance($userid), $userid);
+        case "disconnect":
+            return $check('auth/oidc:manageconnectiondisconnect', \context_user::instance($userid), $userid);
+        case "both":
+            $result = $check('auth/oidc:manageconnectionconnect', \context_user::instance($userid), $userid);
+            return $result && $check('auth/oidc:manageconnectiondisconnect', \context_user::instance($userid), $userid);
+    }
+    return false;
+}
