@@ -819,17 +819,8 @@ abstract class base {
         // If this user is a teacher and viewing a submission, add a timestamp for the new
         // OneNote page.
         if ($isteacher && 'submission_teacher_page_id' == $requestedpageidfield) {
-            // Format the lastModifiedTime as a newly created OneNote page has a datetime format of
-            // YYYY-MM-DDTHH:MM:ss.sssssssZ.  The date time is formatted to YYYY-MM-DDTHH:MM:ssZ then
-            // converted into a timestamp.
-            $lastviewed = $response->lastModifiedTime;
-            $pos = strpos($lastviewed, '.');
-            if (false !== $pos) {
-                $lastviewed = substr($lastviewed, 0, $pos+3);
-                $lastviewed = str_replace('.', ':', $lastviewed);
-                $lastviewed .= 'Z';
-            }
-            $pagerecord->teacher_lastviewed = strtotime($lastviewed);
+            $pagerecord->teacher_lastviewed = strtotime($response->lastModifiedTime);
+            $pagerecord->teacher_lastviewed = empty($pagerecord->teacher_lastviewed) ? null : $pagerecord->teacher_lastviewed;
         }
         $DB->update_record('onenote_assign_pages', $pagerecord);
 
